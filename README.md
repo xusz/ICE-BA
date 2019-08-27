@@ -1,3 +1,4 @@
+## Fork from https://github.com/baidu/ICE-BA
 # ICE-BA
 ## ICE-BA: Incremental, Consistent and Efficient Bundle Adjustment for Visual-Inertial SLAM  
 We present ICE-BA, an incremental, consistent and efficient bundle adjustment for visual-inertial SLAM, which takes feature tracks, IMU measurements and optionally the loop constraints as input, performs in parallel both local BA over the sliding window and global BA over all keyframes, and outputs camera pose and updated map points for each frame in real-time. The main contributions include:  
