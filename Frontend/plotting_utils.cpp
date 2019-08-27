@@ -57,7 +57,7 @@ bool PoseDrawer2D::drawTo(cv::Mat* img_ptr) {
            convertToImageCoordinates(cv::Point2f(latest_pose_.x, latest_pose_.y)),
            convertToImageCoordinates(cv::Point2f(latest_pose_.x, latest_pose_.y)
                                      + cv::Point2f(e_x, e_y) * frameScale_),
-           cv::Scalar(0, 0, 255), 1, CV_AA);
+           cv::Scalar(0, 0, 255), 1, cv::LINE_AA);
   return true;
 }
 
@@ -85,7 +85,7 @@ void PoseDrawer2D::drawPath(cv::Mat* img_ptr) {
       ++it_path_next;
       paths_.erase(it_path_bk);  // clean short segment
     } else {
-      cv::line(*img_ptr, p0, p1, cv::Scalar(0, 255, 0), 1, CV_AA);
+      cv::line(*img_ptr, p0, p1, cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
       ++it_path;
       ++it_path_next;
     }

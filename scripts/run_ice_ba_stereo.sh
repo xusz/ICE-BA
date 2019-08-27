@@ -3,7 +3,7 @@
 # Set your own EuRoC_PATH path to run ice-ba. Use './bin/ice_ba --help' to get the explanation for all of the flags. Flags [imgs_folder] and [iba_param_path] are necessary.
 # Add flag '--save_feature' to save feature message and calibration file for back-end only mode
 
-EuRoC_PATH=~/dataset/EuRoC
+EuRoC_PATH=~/Project/dataset/EuRoC
 
 mkdir $EuRoC_PATH/result
 

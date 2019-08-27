@@ -1,0 +1,12 @@
+/home/xsz/Project/Source/ICE-BA/build/CMakeFiles/rebuild_cache.dir
+/home/xsz/Project/Source/ICE-BA/build/CMakeFiles/edit_cache.dir
+/home/xsz/Project/Source/ICE-BA/build/Frontend/CMakeFiles/rebuild_cache.dir
+/home/xsz/Project/Source/ICE-BA/build/Frontend/CMakeFiles/OF.dir
+/home/xsz/Project/Source/ICE-BA/build/Frontend/CMakeFiles/edit_cache.dir
+/home/xsz/Project/Source/ICE-BA/build/Backend/CMakeFiles/rebuild_cache.dir
+/home/xsz/Project/Source/ICE-BA/build/Backend/CMakeFiles/IBA.dir
+/home/xsz/Project/Source/ICE-BA/build/Backend/CMakeFiles/edit_cache.dir
+/home/xsz/Project/Source/ICE-BA/build/App/CMakeFiles/edit_cache.dir
+/home/xsz/Project/Source/ICE-BA/build/App/CMakeFiles/ice_ba.dir
+/home/xsz/Project/Source/ICE-BA/build/App/CMakeFiles/rebuild_cache.dir
+/home/xsz/Project/Source/ICE-BA/build/App/CMakeFiles/back_end.dir

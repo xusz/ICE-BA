@@ -113,15 +113,15 @@ bool PoseViewer::drawTo(cv::Mat* img_ptr) {
     cv::line(img,
              convertToImageCoordinates(cam_xy),
              convertToImageCoordinates(cam_xy + cv::Point2f(e_x[0], e_x[1]) * _frameScale),
-             cv::Scalar(0, 0, 255), 1, CV_AA);
+             cv::Scalar(0, 0, 255), 1, cv::LINE_AA);
     cv::line(img,
              convertToImageCoordinates(cam_xy),
              convertToImageCoordinates(cam_xy + cv::Point2f(e_y[0], e_y[1]) * _frameScale),
-             cv::Scalar(0, 255, 0), 1, CV_AA);
+             cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
     cv::line(img,
              convertToImageCoordinates(cam_xy),
              convertToImageCoordinates(cam_xy + cv::Point2f(e_z[0], e_z[1]) * _frameScale),
-             cv::Scalar(255, 0, 0), 1, CV_AA);
+             cv::Scalar(255, 0, 0), 1, cv::LINE_AA);
   }
 
   // Display text for trajectory 0
@@ -227,7 +227,7 @@ void PoseViewer::drawPath(cv::Mat* img_ptr) {
           uchar R = path_id * 200;
           color = cv::Scalar(B, G, R);
         }
-        cv::line(img, p0, p1, color, 1, CV_AA);
+        cv::line(img, p0, p1, color, 1, cv::LINE_AA);
         ++it_path;
         ++it_path_next;
       }
