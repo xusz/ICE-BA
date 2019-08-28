@@ -57,6 +57,8 @@ class PoseViewer {
   std::mutex scale_mutex_;
   SpeedAndBias last_speedAndBiases_;
   float last_travel_dist_ = 0.f;
+  std::chrono::time_point<std::chrono::steady_clock> t_start_;
+
   std::atomic<float> _scale;
   std::atomic<float> _min_x;
   std::atomic<float> _min_y;

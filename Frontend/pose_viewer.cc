@@ -34,6 +34,8 @@ PoseViewer::PoseViewer() :
   latest_T_WS_.resize(kMaxNumPaths, Matrix4f::Identity());
   // we will always see a cross in the center of the canvas which are unused  latest_T_WS_
   _image.create(imageSize, imageSize, CV_8UC3);
+
+  t_start_ = std::chrono::steady_clock::now();
 }
 void PoseViewer::set_clear_canvas_before_draw(bool clear_canvas_before_draw) {
   clear_canvas_before_draw_ = clear_canvas_before_draw;
@@ -183,6 +185,20 @@ bool PoseViewer::drawTo(cv::Mat* img_ptr) {
                   cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
     }
   }
+
+  {
+    float dur_time = std::chrono::duration_cast<std::chrono::microseconds>(
+                         std::chrono::steady_clock::now() - t_start_).count();
+    std::stringstream timetext;
+    timetext.setf(std::ios::fixed, std::ios::floatfield);
+    timetext.precision(3);
+    timetext << "time = " << (dur_time / 1000);
+    cv::putText(img, timetext.str(), cv::Point(15, 135),
+                cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+
+    t_start_ = std::chrono::steady_clock::now();
+  }
+
   return true;
 }
 cv::Point2f PoseViewer::convertToImageCoordinates(const cv::Point2f & pointInMeters) {
