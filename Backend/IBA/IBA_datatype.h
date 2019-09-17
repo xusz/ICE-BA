@@ -103,8 +103,8 @@ struct MapPointMeasurement {
         ;
   }
   Point2D x;
-#ifdef CFG_STEREO
-//#if 1
+//#ifdef CFG_STEREO
+#if 1
   ubyte right;
 #endif
 };

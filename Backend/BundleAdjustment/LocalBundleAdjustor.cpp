@@ -272,7 +272,7 @@ void LocalBundleAdjustor::Run() {
   m_delta2 = BA_DL_RADIUS_INITIAL;
   m_ts[TM_TOTAL].Start();
   m_ts[TM_SYNCHRONIZE].Start();
-  SynchronizeData();
+  SynchronizeData();                             // TODO: 1
   m_ts[TM_SYNCHRONIZE].Stop();
   m_ts[TM_TOTAL].Stop();
 #if 0
@@ -584,7 +584,7 @@ void LocalBundleAdjustor::Run() {
     UT::Print("\r[%d] UpdateFactors Start\t\t\t", iFrm);
 #endif
     m_ts[TM_FACTOR].Start();
-    UpdateFactors();
+    UpdateFactors();                           // TODO: 2
     m_ts[TM_FACTOR].Stop();
 #ifdef LBA_DEBUG_EIGEN
     DebugUpdateFactors();
@@ -605,7 +605,7 @@ void LocalBundleAdjustor::Run() {
     UT::Print("\r[%d] UpdateSchurComplement Start\t\t\t", iFrm);
 #endif
     m_ts[TM_SCHUR_COMPLEMENT].Start();
-    UpdateSchurComplement();
+    UpdateSchurComplement();                  // TODO: 3
     m_ts[TM_SCHUR_COMPLEMENT].Stop();
 #ifdef LBA_DEBUG_EIGEN
     DebugUpdateSchurComplement();
@@ -618,7 +618,7 @@ void LocalBundleAdjustor::Run() {
     UT::Print("\r[%d] SolveSchurComplement Start\t\t\t", iFrm);
 #endif
     m_ts[TM_CAMERA].Start();
-    const bool scc = SolveSchurComplement();
+    const bool scc = SolveSchurComplement();    // TODO: 4
     m_ts[TM_CAMERA].Stop();
 #ifdef LBA_DEBUG_EIGEN
     DebugSolveSchurComplement();
@@ -635,7 +635,7 @@ void LocalBundleAdjustor::Run() {
     UT::Print("\r[%d] SolveBackSubstitution Start\t\t\t", iFrm);
 #endif
     m_ts[TM_DEPTH].Start();
-    SolveBackSubstitution();
+    SolveBackSubstitution();                    // TODO: 5
     m_ts[TM_DEPTH].Stop();
 #ifdef LBA_DEBUG_EIGEN
     DebugSolveBackSubstitution();
@@ -657,7 +657,7 @@ void LocalBundleAdjustor::Run() {
         UT::Print("\r[%d] SolveGradientDescent Start\t\t\t", iFrm);
 #endif
         m_ts[TM_UPDATE].Start();
-        SolveGradientDescent();
+        SolveGradientDescent();           // TODO: 6
         m_ts[TM_UPDATE].Stop();
 #ifdef LBA_DEBUG_EIGEN
         DebugSolveGradientDescent();
@@ -670,8 +670,8 @@ void LocalBundleAdjustor::Run() {
       UT::Print("\r[%d] SolveDogLeg Start\t\t\t", iFrm);
 #endif
       m_ts[TM_UPDATE].Start();
-      SolveDogLeg();
-      UpdateStatesPropose();
+      SolveDogLeg();                      // TODO: 7
+      UpdateStatesPropose();              // TODO: 8
       m_ts[TM_UPDATE].Stop();
 #ifdef LBA_DEBUG_PRINT_STEP
       UT::Print("\r[%d] SolveDogLeg Stop\t\t\t", iFrm);
@@ -698,7 +698,7 @@ void LocalBundleAdjustor::Run() {
       UT::Print("\r[%d] ComputeReduction Start\t\t\t", iFrm);
 #endif
       m_ts[TM_UPDATE].Start();
-      ComputeReduction();
+      ComputeReduction();                         // TODO: 9
       m_ts[TM_UPDATE].Stop();
 #ifdef CFG_VERBOSE
       if (m_verbose) {
@@ -719,7 +719,7 @@ void LocalBundleAdjustor::Run() {
       UT::Print("\r[%d] UpdateStatesDecide Start\t\t\t", iFrm);
 #endif
       m_ts[TM_UPDATE].Start();
-      const bool accept = UpdateStatesDecide();
+      const bool accept = UpdateStatesDecide();    // TODO: 10
       m_ts[TM_UPDATE].Stop();
 #ifdef LBA_DEBUG_PRINT_STEP
       UT::Print("\r[%d] UpdateStatesDecide Stop\t\t\t", iFrm);
@@ -733,7 +733,7 @@ void LocalBundleAdjustor::Run() {
       UT::Print("\r[%d] UpdateStatesDecide Start\t\t\t", iFrm);
 #endif
       m_ts[TM_UPDATE].Start();
-      UpdateStatesDecide();
+      UpdateStatesDecide();                        // TODO:  11
       m_ts[TM_UPDATE].Stop();
 #ifdef LBA_DEBUG_PRINT_STEP
       UT::Print("\r[%d] UpdateStatesDecide Stop\t\t\t", iFrm);
@@ -749,7 +749,7 @@ void LocalBundleAdjustor::Run() {
       break;
     }
     if (LBA_EMBEDDED_POINT_ITERATION) {
-      m_ts[TM_UPDATE].Start();
+      m_ts[TM_UPDATE].Start();                     // TODO:
       EmbeddedPointIteration(m_CsLF, m_CsKF, m_ucsKF, m_uds, &m_ds);
       m_ts[TM_UPDATE].Stop();
     }
@@ -1644,12 +1644,13 @@ void LocalBundleAdjustor::SynchronizeData() {
   }
 #endif
   for (std::list<InputLocalFrame>::iterator ILF = m_ILFs2.begin(); ILF != m_ILFs2.end(); ++ILF) {
+    // process the LF of invalid. 是否可以直接处理最后帧或者倒序处理
     if (ILF->m_C.m_T.Valid() && ILF->m_C.m_v.Valid()) {
       continue;
     }
     Camera C;
     if (m_LFs.empty()) {
-      IMU::InitializeCamera(ILF->m_us, C);
+      IMU::InitializeCamera(ILF->m_us, C);  // TODO:
 #ifdef LBA_DEBUG_GROUND_TRUTH_MEASUREMENT
 //#if 0
       if (m_CsGT) {
@@ -1746,13 +1747,13 @@ void LocalBundleAdjustor::SynchronizeData() {
 #endif
       if (IKF->m_C.Invalid()) {
         for (std::list<InputLocalFrame>::iterator ILF = m_ILFs2.begin(); ILF != m_ILFs2.end(); ++ILF) {
-          if (ILF->m_T == IKF->m_T) {
+          if (ILF->m_T == IKF->m_T) {   // TODO: 是否可以倒序处理
             IKF->m_C = ILF->m_C;
             break;
           }
         }
       }
-      if (IKF->m_C.Invalid()) {
+      if (IKF->m_C.Invalid()) {   // TODO: m_LFs 是哪里蹦出来的，为什么可以保证m_T ？？？
         const int nLFs = static_cast<int>(m_LFs.size());
         for (int iLF = 0; iLF < nLFs; ++iLF) {
           if (m_LFs[iLF].m_T == IKF->m_T) {
@@ -1884,7 +1885,7 @@ void LocalBundleAdjustor::SynchronizeData() {
                                     m_solver->m_internal->m_iKF2d, &ILF);
       }
 #endif
-      if (ILF.m_d.Invalid()) {
+      if (ILF.m_d.Invalid()) {   // depth
         if (m_LFs.empty()) {
           ILF.m_d.Initialize();
         } else {
@@ -2071,7 +2072,7 @@ void LocalBundleAdjustor::SynchronizeData() {
   if (newKF || delKF || updCams) {
     m_ts[TM_TOTAL].Stop();
     m_ts[TM_SYNCHRONIZE].Stop();
-    m_GBA->WakeUp(serialGBA);
+    m_GBA->WakeUp(serialGBA);       // TODO: 是否可以不使用GBA
     m_ts[TM_SYNCHRONIZE].Start();
     m_ts[TM_TOTAL].Start();
   }
@@ -3476,7 +3477,7 @@ void LocalBundleAdjustor::_PushLocalFrame(const InputLocalFrame &ILF) {
 #ifdef CFG_CHECK_REPROJECTION
     m_esLF.resize(nLFs2, std::make_pair(FLT_MAX, FLT_MAX));
 #endif
-  } else {
+  } else {   // TODO: Marg the oldest frame. Marg the second latest frame ???
     PopLocalFrame();
     const int iLF = m_ic2LF.front();
     m_ic2LF.erase(m_ic2LF.begin());
@@ -3983,7 +3984,7 @@ void LocalBundleAdjustor::_PushKeyFrame(const GlobalMap::InputKeyFrame &IKF) {
     }
     ubyte *uds = m_uds.data() + m_iKF2d[Z.m_iKF];
     for (int iz = Z.m_iz1; iz < Z.m_iz2; ++iz) {
-      uds[KF.m_zs[iz].m_ix] |= udFlag3;
+      uds[KF.m_zs[iz].m_ix] |= udFlag3;  // TODO: udFlag3 == 0 ???
     }
   }
   m_GM->LBA_PushKeyFrame(GlobalMap::Camera(IKF.m_C.m_T, KF.m_T.m_iFrm, GM_FLAG_FRAME_DEFAULT
@@ -3993,7 +3994,7 @@ void LocalBundleAdjustor::_PushKeyFrame(const GlobalMap::InputKeyFrame &IKF) {
   ));
   const int N = static_cast<int>(std::lower_bound(m_usKF.Data(), m_usKF.End(), KF.m_T.m_t) -
                                                   m_usKF.Data());
-  m_usKF.Erase(N, m_usKFLast);
+  m_usKF.Erase(N, m_usKFLast);   // copy values(N) from m_usKF to m_usKFLast, and remove values from m_usKF
   m_GBA->PushKeyFrame(IKF, m_usKFLast, m_dsBkp
 #ifdef CFG_HANDLE_SCALE_JUMP
                     , m_dsKF[iKF]
@@ -4528,7 +4529,7 @@ void LocalBundleAdjustor::SearchMatchingKeyFrames(FRM::Frame &F) {
       int _iz;
       for (_iz = _iz1; _iz < _iz2 && !m_marksTmp1[_KF.m_zs[_iz].m_ix]; ++_iz);
       if (_iz < _iz2) {
-        iKF2Z[_iKF] = -2;
+        iKF2Z[_iKF] = -2;   // TODO: what's the meaning ???
       }
     }
   }

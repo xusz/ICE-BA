@@ -229,7 +229,7 @@ void GlobalBundleAdjustor::Run() {
   m_delta2 = BA_DL_RADIUS_INITIAL;
   m_ts[TM_TOTAL].Start();
   m_ts[TM_SYNCHRONIZE].Start();
-  SynchronizeData();
+  SynchronizeData();   //
   m_ts[TM_SYNCHRONIZE].Stop();
   m_ts[TM_TOTAL].Stop();
 #if 0
@@ -549,19 +549,19 @@ void GlobalBundleAdjustor::Run() {
     }
 #endif
     m_ts[TM_FACTOR].Start();
-    UpdateFactors();
+    UpdateFactors();   //
     m_ts[TM_FACTOR].Stop();
 #ifdef GBA_DEBUG_EIGEN
     DebugUpdateFactors();
 #endif
     m_ts[TM_SCHUR_COMPLEMENT].Start();
-    UpdateSchurComplement();
+    UpdateSchurComplement();   //
     m_ts[TM_SCHUR_COMPLEMENT].Stop();
 #ifdef GBA_DEBUG_EIGEN
     DebugUpdateSchurComplement();
 #endif
     m_ts[TM_CAMERA].Start();
-    const bool scc = SolveSchurComplement();
+    const bool scc = SolveSchurComplement();   //
     m_ts[TM_CAMERA].Stop();
 #ifdef GBA_DEBUG_EIGEN
     DebugSolveSchurComplement();
@@ -572,7 +572,7 @@ void GlobalBundleAdjustor::Run() {
     //  break;
     //}
     m_ts[TM_DEPTH].Start();
-    SolveBackSubstitution();
+    SolveBackSubstitution();   //
     m_ts[TM_DEPTH].Stop();
 #ifdef GBA_DEBUG_EIGEN
     DebugSolveBackSubstitution();
@@ -595,7 +595,7 @@ void GlobalBundleAdjustor::Run() {
 #endif
       }
       m_ts[TM_UPDATE].Start();
-      SolveDogLeg();
+      SolveDogLeg();   //
       UpdateStatesPropose();
       m_ts[TM_UPDATE].Stop();
 #ifdef CFG_VERBOSE

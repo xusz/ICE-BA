@@ -21,7 +21,7 @@
 #include "GlobalMap.h"
 #include "CameraPrior.h"
 #include "Candidate.h"
-#include "Timer.h"
+#include "BkTimer.h"
 
 #define LBA_FLAG_FRAME_DEFAULT                      0
 #define LBA_FLAG_FRAME_PUSH_TRACK                   1
@@ -86,8 +86,8 @@ class LocalBundleAdjustor : public MT::Thread {
       UT::LoadB(m_C, fp);
     }
    public:
-    AlignedVector<IMU::Measurement> m_us;
-    Camera m_C;
+    AlignedVector<IMU::Measurement> m_us;  // IMU measurements between last frame and current frame;
+    Camera m_C;                            // initial camera state of current frame
   };
 
  public:
@@ -298,7 +298,7 @@ class LocalBundleAdjustor : public MT::Thread {
    public:
     std::vector<Index> m_Is;
     std::vector<int> m_iI2zm;
-    std::vector<ubyte> m_ms;
+    std::vector<ubyte> m_ms;         // LBA_FLAG_MARGINALIZATION_DEFAULT
     AlignedVector<float> m_SmddsST;
   };
 
@@ -551,7 +551,7 @@ class LocalBundleAdjustor : public MT::Thread {
     AlignedVector<FTR::Factor::FixSource::M1> m_Mzs1;
     AlignedVector<FTR::Factor::FixSource::M2> m_Mzs2;
     AlignedVector<FTR::Factor::FixSource::A3> m_AzsST;
-    AlignedVector<FTR::Factor::DD> m_SmddsST;
+    AlignedVector<FTR::Factor::DD> m_SmddsST;    // |LBA_FLAG_FRAME_UPDATE_DEPTH
     std::vector<int> m_iLFsMatch;
     MeasurementMatchLF m_Zm;
   };
@@ -767,10 +767,10 @@ class LocalBundleAdjustor : public MT::Thread {
       UT_ASSERT(m_Azs.Size() == static_cast<int>(m_zs.size()));
     }
    public:
-    std::vector<int> m_ix2ST;
+    std::vector<int> m_ix2ST;            // SlidingTrack index
     std::vector<SlidingTrack> m_STs;
     std::vector<int> m_Nsts;
-    std::vector<ubyte> m_ms, m_usST;
+    std::vector<ubyte> m_ms, m_usST;     //  m_ms:LBA_FLAG_MARGINALIZATION_DEFAULT
     AlignedVector<FTR::Factor::FixSource::Source::A> m_Axps, m_AxpsST;
     AlignedVector<FTR::Factor::FixSource::Source::A> m_Axs, m_AxsST;
     AlignedVector<FTR::Factor::FixSource::Source::M> m_Mxs, m_MxsST;
@@ -1418,7 +1418,9 @@ class LocalBundleAdjustor : public MT::Thread {
 
  protected:
 
-  virtual void SynchronizeData();
+    void extracted(IMU::Delta &D, const std::list<InputLocalFrame>::iterator &ILF, const Camera &_C, float _t, const IMU::Measurement *_u);
+    
+    virtual void SynchronizeData();
   virtual void UpdateData();
   virtual bool BufferDataEmpty();
 
@@ -1636,16 +1638,16 @@ class LocalBundleAdjustor : public MT::Thread {
   enum InputType { IT_LOCAL_FRAME, IT_KEY_FRAME, IT_KEY_FRAME_SERIAL, IT_DELETE_KEY_FRAME,
                    IT_DELETE_MAP_POINTS, IT_UPDATE_CAMERAS, IT_UPDATE_CAMERAS_SERIAL };
   std::list<InputType> m_ITs1, m_ITs2;
-  std::list<InputLocalFrame> m_ILFs1, m_ILFs2;
-  std::list<GlobalMap::InputKeyFrame> m_IKFs1, m_IKFs2;
-  std::list<int> m_IDKFs1, m_IDKFs2;
-  std::list<std::vector<int> > m_IDMPs1, m_IDMPs2;
-  std::list<std::vector<GlobalMap::InputCamera> > m_IUCs1, m_IUCs2;
+  std::list<InputLocalFrame> m_ILFs1, m_ILFs2;    // IT_LOCAL_FRAME
+  std::list<GlobalMap::InputKeyFrame> m_IKFs1, m_IKFs2;    // IT_KEY_FRAME_SERIAL
+  std::list<int> m_IDKFs1, m_IDKFs2;    // IT_DELETE_KEY_FRAME
+  std::list<std::vector<int> > m_IDMPs1, m_IDMPs2;    // IT_DELETE_MAP_POINTS
+  std::list<std::vector<GlobalMap::InputCamera> > m_IUCs1, m_IUCs2;  // IT_UPDATE_CAMERAS
 
   CameraLF m_C;
   boost::shared_mutex m_MTC;
 
-  Timer m_ts[TM_TYPES];
+  BkTimer m_ts[TM_TYPES];
 #ifdef CFG_HISTORY
   std::vector<History> m_hists;
   MH m_MH;
@@ -1656,14 +1658,14 @@ class LocalBundleAdjustor : public MT::Thread {
 
   Camera::Fix::Origin m_Zo;
   Camera::Fix::Origin::Factor m_Ao;
-
-  std::vector<int> m_ic2LF;
-  std::vector<LocalFrame> m_LFs;
+  // For Slide Window / LBA_MAX_LOCAL_FRAMES
+  std::vector<int> m_ic2LF;       // index to m_LFs/m_CsLF
+  std::vector<LocalFrame> m_LFs;  // LBA_MAX_LOCAL_FRAMES  for UpdateFactorsFeatureLF
   AlignedVector<Camera> m_CsLF;
 #ifdef CFG_GROUND_TRUTH
   AlignedVector<Camera> m_CsLFGT;
 #endif
-  std::vector<ubyte> m_ucsLF, m_ucmsLF;
+  std::vector<ubyte> m_ucsLF, m_ucmsLF;   // LBA_FLAG_*
 #ifdef CFG_INCREMENTAL_PCG
   AlignedVector<LA::Vector6f> m_xcsLF;
   AlignedVector<LA::Vector9f> m_xmsLF;
@@ -1682,21 +1684,21 @@ class LocalBundleAdjustor : public MT::Thread {
 #ifdef CFG_GROUND_TRUTH
   AlignedVector<Rigid3D> m_CsKFGT;
 #endif
-  std::vector<ubyte> m_ucsKF;
+  std::vector<ubyte> m_ucsKF;      // LBA_FLAG_FRAME_UPDATE_CAMERA
 #ifdef CFG_GROUND_TRUTH
-  std::vector<ubyte> m_ucsKFGT;
+  std::vector<ubyte> m_ucsKFGT;    // LBA_FLAG_FRAME_DEFAULT
 #endif
 #ifdef CFG_HANDLE_SCALE_JUMP
   std::vector<float> m_dsKF;
 #endif
   AlignedVector<IMU::Measurement> m_usKF, m_usKFLast;
-
+  // For KF
   std::vector<int> m_iKF2d;
   std::vector<Depth::InverseGaussian> m_ds;
   std::vector<Depth::InverseGaussian> *m_dsGT;
-  std::vector<ubyte> m_uds;
+  std::vector<ubyte> m_uds;     //  X | LBA_FLAG_TRACK_*
 #ifdef CFG_GROUND_TRUTH
-  std::vector<ubyte> m_udsGT;
+  std::vector<ubyte> m_udsGT;   // LBA_FLAG_TRACK_DEFAULT
 #endif
 
 #ifdef CFG_CHECK_REPROJECTION
@@ -1708,22 +1710,23 @@ class LocalBundleAdjustor : public MT::Thread {
   CameraPrior::Pose m_ZpKF;
   CameraPrior::Motion::Factor m_ApLF;
 
-  AlignedVector<Camera::Factor::Unitary::CC> m_SAcusLF, m_SMcusLF;
+  AlignedVector<Camera::Factor::Unitary::CC> m_SAcusLF, m_SMcusLF;   // S: SildeMargion ???
   AlignedVector<Camera::Factor> m_SAcmsLF;
+  // LM_FLAG_FRAME_UPDATE_CAMERA_LF
+  std::vector<ubyte> m_UcsLF, m_UcsKF, m_Uds;   // update LF / KF / depth
 
-  std::vector<ubyte> m_UcsLF, m_UcsKF, m_Uds;
-
-  AlignedVector<LA::AlignedMatrix6x6f> m_Acus, m_Acbs, m_AcbTs;
-  AlignedVector<LA::AlignedMatrix9x9f> m_Amus;
+  // m_Acus:下三角结构
+  AlignedVector<LA::AlignedMatrix6x6f> m_Acus, m_Acbs, m_AcbTs;   // the A for camera
+  AlignedVector<LA::AlignedMatrix9x9f> m_Amus;                    // the A for motion 下三角结构
   AlignedVector<Camera::Conditioner::C> m_Mcs;
   AlignedVector<Camera::Conditioner::M> m_Mms;
-  AlignedMatrixX<LA::AlignedMatrix6x6f> m_Mcc, m_MccT;
+  AlignedMatrixX<LA::AlignedMatrix6x6f> m_Mcc, m_MccT;            // the M at PCG
   AlignedMatrixX<LA::AlignedMatrix6x9f> m_Mcm, m_MmcT;
   AlignedMatrixX<LA::AlignedMatrix9x6f> m_Mmc, m_McmT;
   AlignedMatrixX<LA::AlignedMatrix9x9f> m_Mmm, m_MmmT;
   AlignedVector<LA::ProductVector6f> m_bcs;
   AlignedVector<LA::AlignedVector9f> m_bms;
-  LA::AlignedVectorXf m_xs, m_bs, m_rs, m_ps, m_zs, m_drs;
+  LA::AlignedVectorXf m_xs, m_bs, m_rs, m_ps, m_zs, m_drs;        // for solved PCG
   std::vector<int> m_ic2b;
 
   LA::AlignedVectorXf m_xp2s, m_xr2s, m_xv2s, m_xba2s, m_xbw2s, m_xds, m_x2s, m_axds;
@@ -1744,18 +1747,18 @@ class LocalBundleAdjustor : public MT::Thread {
   float m_x2GN, m_x2GD, m_x2DL, m_bl, m_gTAg, m_beta, m_dFa, m_dFp, m_rho;
   bool m_update, m_converge, m_empty;
 
-  AlignedVector<Rotation3D> m_R12s;
-  AlignedVector<LA::AlignedVector3f> m_t12s;
-  std::vector<Depth::Measurement> m_zds;
+  AlignedVector<Rotation3D> m_R12s;             // m_CsKFBkp.Size()
+  AlignedVector<LA::AlignedVector3f> m_t12s;    // m_CsKFBkp.Size()
+  std::vector<Depth::Measurement> m_zds;        // For KF
 
   CandidateVector<int> m_idxsSortTmp;
-  std::vector<ubyte> m_marksTmp1, m_marksTmp2;
-  std::vector<int> m_cntsTmp, m_idxsTmp1, m_idxsTmp2, m_idxsTmp3;
+  std::vector<ubyte> m_marksTmp1, m_marksTmp2;        // m_CsKFBkp.Size()
+  std::vector<int> m_cntsTmp, m_idxsTmp1, m_idxsTmp2, m_idxsTmp3;   // For KF
   std::vector<std::vector<FRM::Measurement>::iterator> m_iLF2Z;
   std::vector<std::vector<int> > m_idxsListTmp;
-  std::vector<FTR::Source> m_xsTmp;
+  std::vector<FTR::Source> m_xsTmp;                   // For IKF.m_Xs
   std::vector<std::vector<FTR::Measurement> > m_zsListTmp;
-  std::vector<FTR::Measurement::Match> m_izmsTmp;
+  std::vector<FTR::Measurement::Match> m_izmsTmp;     // feature matchs
   std::vector<KeyFrame::SlidingTrack> m_STsTmp;
   std::vector<int> m_ix2STTmp;
   std::vector<ubyte> m_usSTTmp;

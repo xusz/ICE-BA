@@ -93,7 +93,7 @@ class Measurement {
   inline bool Invalid() const { return m_ix == -1; }
   inline void Invalidate() { m_ix = -1; }
  public:
-  union { int m_iKF, m_id, m_ix; };
+    union { int m_iKF, m_id, m_ix; };   // m_ix : index of feature id
   Point2D m_z;
   LA::SymmetricMatrix2x2f m_W;
 #ifdef CFG_STEREO
@@ -307,7 +307,7 @@ class DD {
     amb.m_b = A.m_b - b.m_b;
   }
  public:
-  float m_a, m_b;
+  float m_a, m_b;   // m_a = UT::Inverse(BA_VARIANCE_REGULARIZATION_DEPTH, BA_WEIGHT_FEATURE)
 };
 class XX {
  public:

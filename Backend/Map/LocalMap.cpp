@@ -73,7 +73,7 @@ void LocalMap::IBA_DeleteKeyFrame(const int iFrm, const int iKF) {
   m_uds.erase(m_uds.begin() + id1, m_uds.begin() + id2);
   MT_WRITE_LOCK_END(m_MT, iFrm, MT_TASK_LM_IBA_DeleteKeyFrame);
 }
-
+// update flags
 ubyte LocalMap::IBA_Synchronize(const int iFrm, std::list<CameraLF> &CsLF,
                                 std::vector<CameraKF> &CsKF,
                                 std::vector<Depth::InverseGaussian> &ds,

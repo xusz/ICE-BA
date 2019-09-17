@@ -18,7 +18,7 @@
 
 #include "Rotation.h"
 #include "Matrix4x4.h"
-
+// 刚体
 class Rigid3D : public Rotation3D {
 
  public:
@@ -333,7 +333,7 @@ class Rigid3D : public Rotation3D {
 
   static inline void ABI(const Rigid3D &Ta, const Rigid3D &Tb, Rigid3D &TabI) {
     LA::AlignedMatrix3x3f::ABT(Ta, Tb, TabI);
-    TabI.MakeOrthogonal();
+    TabI.MakeOrthogonal();    // 正交化
     TabI.SetTranslation(Ta.GetTranslation() - TabI.GetAppliedRotation(Tb.GetTranslation()));
   }
   static inline void ABI(const Row &Ta, const Rigid3D &Tb, Row &TabI) {

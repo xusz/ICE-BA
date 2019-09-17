@@ -38,7 +38,9 @@
 #endif
 
 void LocalBundleAdjustor::SaveB(FILE *fp) {
+#ifdef CFG_DEBUG_MT
   MT::Thread::SaveB(fp);
+#endif
   MT_READ_LOCK_BEGIN(m_MT, MT_TASK_NONE, MT_TASK_NONE);
   UT::ListSaveB(m_ITs1, fp);
   UT::ListSaveB(m_ITs2, fp);
@@ -113,7 +115,9 @@ void LocalBundleAdjustor::SaveB(FILE *fp) {
 }
 
 void LocalBundleAdjustor::LoadB(FILE *fp) {
+#ifdef CFG_DEBUG_MT
   MT::Thread::LoadB(fp);
+#endif
   MT_WRITE_LOCK_BEGIN(m_MT, MT_TASK_NONE, MT_TASK_NONE);
   UT::ListLoadB(m_ITs1, fp);
   UT::ListLoadB(m_ITs2, fp);

@@ -21,7 +21,7 @@
 #include "stdafx.h"
 #include "InputSequence.h"
 #include "Parameter.h"
-#include "Timer.h"
+#include "BkTimer.h"
 #include "MultiThread.h"
 
 #ifdef IBA_WITH_CVD
@@ -155,7 +155,7 @@ bool RunSolver(const Configurator &cfgor, const InputSequence &IS, const std::st
   UT::PrintStart(UT::FileNameReplaceDirectory(cfgor.GetArgument("print_file"),
                  ".", IS.m_dir));
   for (int iFrm = iFrmStart + 1, iFrmLast = -1; iFrm < nFrms; ++iFrm) {
-    const double t1 = Timer::GetTime();
+    const double t1 = BkTimer::GetTime();
     if (!seeds.empty()) {
       srand(seeds[iFrm]);
     }
@@ -366,7 +366,7 @@ bool RunSolver(const Configurator &cfgor, const InputSequence &IS, const std::st
       }
     }
 #endif
-    const double t2 = Timer::GetTime(), dt = t2 - t1;
+    const double t2 = BkTimer::GetTime(), dt = t2 - t1;
 
     if (dt < IS.m_dt) {
       const int ms = static_cast<int>((IS.m_dt - dt) * 1000.0 + 0.5);

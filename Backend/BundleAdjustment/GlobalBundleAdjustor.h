@@ -20,7 +20,7 @@
 #include "LocalMap.h"
 #include "GlobalMap.h"
 #include "CameraPrior.h"
-#include "Timer.h"
+#include "BkTimer.h"
 
 #define GBA_FLAG_FRAME_DEFAULT                  0
 #define GBA_FLAG_FRAME_UPDATE_CAMERA            1
@@ -738,11 +738,11 @@ class GlobalBundleAdjustor : public MT::Thread {
   std::list<InputKeyFrame> m_IKFs1, m_IKFs2;
   std::list<int> m_IDKFs1, m_IDKFs2;
   std::list<std::vector<int> > m_IDMPs1, m_IDMPs2;
-  std::list<std::vector<GlobalMap::InputCamera> > m_IUCs1, m_IUCs2;
+  std::list<std::vector<GlobalMap::InputCamera> > m_IUCs1, m_IUCs2;   // m_ITs1.IT_UPDATE_CAMERAS
   std::list<CameraPrior::Pose> m_IZps1, m_IZps2;
-  CameraPriorMotion m_IZpLM1, m_IZpLM2;
+  CameraPriorMotion m_IZpLM1, m_IZpLM2;          // m_ITs1.IT_CAMERA_PRIOR_MOTION
 
-  Timer m_ts[TM_TYPES];
+  BkTimer m_ts[TM_TYPES];
 #ifdef CFG_HISTORY
   std::vector<History> m_hists;
 #endif
@@ -799,7 +799,7 @@ class GlobalBundleAdjustor : public MT::Thread {
   AlignedVector<Camera::Factor::Unitary::CC> m_SAcus, m_SMcus;
   AlignedVector<Camera::Factor> m_SAcmsLM;
 
-  std::vector<ubyte> m_Ucs/*, m_Uds*/;
+  std::vector<ubyte> m_Ucs/*, m_Uds*/;   // GM_FLAG_FRAME_DEFAULT
 
   std::vector<int> m_iKF2cb;
   AlignedVector<LA::AlignedMatrix6x6f> m_Acus, m_Acbs, m_AcbTs;

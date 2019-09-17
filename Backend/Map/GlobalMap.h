@@ -36,7 +36,7 @@ class GlobalMap {
     inline bool operator < (const int iFrm) const { return m_iFrm < iFrm; }
     inline bool operator < (const InputCamera &C) const { return m_iFrm < C.m_iFrm; }
    public:
-    Rigid3D m_C;
+    Rigid3D m_C;   // 刚性 Rotation
     int m_iFrm;
   };
 
@@ -54,7 +54,7 @@ class GlobalMap {
 #endif
     {}
    public:
-    ubyte m_uc;
+    ubyte m_uc;    // update flag
 #ifdef CFG_HANDLE_SCALE_JUMP
     float m_d;
 #endif
@@ -111,7 +111,7 @@ class GlobalMap {
     }
    public:
     ::Camera m_C;
-    std::vector<Point> m_Xs;
+    std::vector<Point> m_Xs;  // TODO: features ???
   };
 
   class KeyFrame : public FRM::Frame {

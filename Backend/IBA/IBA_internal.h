@@ -41,7 +41,7 @@ class Internal {
       return m_id < id;
     }
    public:
-    int m_id;
+    int m_id;        // feature id
     ::Point2D m_z;
     LA::SymmetricMatrix2x2f m_W;
     ubyte m_right;
@@ -103,13 +103,16 @@ class Internal {
   GlobalBundleAdjustor m_GBA;
   int m_debug;
   int m_nFrms;
-  std::vector<FRM::Tag> m_Ts;
+  std::vector<FRM::Tag> m_Ts;      // tags of current frames / PushCurrentFrame()
+  // m_idx2iX : global ponit idx to feature index(X)
+  //   m_iX2d : feature index(X) to feature id
+  //  m_iKF2d : KF index to feature id
   std::vector<int> m_iKF2d, m_id2X, m_iX2d, m_id2idx, m_idx2iX;
-  std::vector<::Point2D> m_xs;
-  std::list<LocalMap::CameraLF> m_CsLF;
-  std::vector<LocalMap::CameraKF> m_CsKF;
-  std::vector<::Depth::InverseGaussian> m_ds;
-  std::vector<ubyte> m_uds;
+  std::vector<::Point2D> m_xs;                 // points of features
+  std::list<LocalMap::CameraLF> m_CsLF;        // CamerasLocalFrame（s)
+  std::vector<LocalMap::CameraKF> m_CsKF;      // CamerasKeyFrame（s)
+  std::vector<::Depth::InverseGaussian> m_ds;  // 高斯逆深度
+  std::vector<ubyte> m_uds;                    // update flags
 #ifdef CFG_GROUND_TRUTH
   AlignedVector<IMU::Measurement> m_usGT;
   std::vector<int> m_iusGT;
@@ -120,8 +123,8 @@ class Internal {
   std::vector<std::vector<::Depth::Measurement> > m_zsGT;
 #endif
 
-  Camera::Calibration m_K;
-  ::Intrinsic::UndistortionMap m_UM;
+  Camera::Calibration m_K;            // 校准
+  ::Intrinsic::UndistortionMap m_UM;  // 不失真
 #ifdef CFG_STEREO
   ::Intrinsic::UndistortionMap m_UMr;
 #endif
@@ -129,12 +132,12 @@ class Internal {
   std::vector<::Depth::InverseGaussian> m_DsGT;
   std::string m_dir;
 
-  std::vector<FeatureMeasurement> m_zsSortTmp;
-  std::vector<FTR::Measurement> m_zsTmp;
+  std::vector<FeatureMeasurement> m_zsSortTmp;   // sort by m_id // feature measurements of current frame
+  std::vector<FTR::Measurement> m_zsTmp;         // Measurements in KF
   std::vector<MapPointIndex> m_idxsSortTmp;
   std::vector<int> m_idxsTmp;
 
-  LocalBundleAdjustor::InputLocalFrame m_ILF;
+  LocalBundleAdjustor::InputLocalFrame m_ILF;  
   GlobalMap::InputKeyFrame m_IKF;
 
   std::vector<GlobalMap::InputCamera> m_ICs;

@@ -289,7 +289,7 @@ class AlignedMatrix6x6f {
   inline bool Valid() const { return m_data[0][0] != FLT_MAX; }
   inline bool Invalid() const { return m_data[0][0] == FLT_MAX; }
   inline void Invalidate() { m_data[0][0] = FLT_MAX; }
-
+  // 上三角转为下三角
   inline void SetLowerFromUpper() {
     m_data[1][0] = m_data[0][1];
     m_data[2][0] = m_data[0][2];    m_data[2][1] = m_data[1][2];
@@ -999,7 +999,7 @@ class AlignedMatrix6x6f {
     xp128f m_data4[9];
   };
 };
-
+// 上三角
 template<typename TYPE> class SymmetricMatrix6x6 {
  public:
   inline const TYPE& m00() const { return m_data[0]; }    inline TYPE& m00() { return m_data[0]; }
@@ -1362,7 +1362,7 @@ template<> inline void SymmetricMatrix6x6f::GetAlignedMatrix6x6f(AlignedMatrix6x
   memcpy(M[3] + 3, &m33(), 12);
   memcpy(M[4] + 4, &m44(), 8);
   M[5][5] = m55();
-  M.SetLowerFromUpper();
+  M.SetLowerFromUpper();   // 上三角转为下三角
 }
 }  // namespace LA
 

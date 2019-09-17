@@ -22,12 +22,12 @@
 #endif
 #include <vector>
 
-class Timer {
+class BkTimer {
  public:
-  inline Timer(const int N = 1) {
+  inline BkTimer(const int N = 1) {
     this->Reset(N);
   }
-  inline ~Timer() { }
+  inline ~BkTimer() { }
   inline void Reset(const int N = 1) {
     m_first = true;
     m_idx = 0;

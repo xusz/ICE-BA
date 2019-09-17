@@ -726,7 +726,7 @@ void InitializeCamera(const AlignedVector<Measurement> &us, Camera &C) {
     LA::AlignedVector3f g;
     g.MakeZero();
     for (int i = 0; i < N; ++i) {
-      g += us[i].m_a;
+      g += us[i].m_a;  // TODO:
     }
     g.Normalize();
     g.MakeMinus();
@@ -837,9 +837,9 @@ void PreIntegrate(const Measurement *us, const int N, const float t1, const floa
     const xp128f dt = xp128f::get(_t2 - _t1);
     const xp128f dT = xp128f::get(_t1 - t1);
     const xp128f dt_2 = xp128f::get(dt[0] * 0.5f);
-    Tpg = (dt_2[0] + (_t1 - t1)) * dt[0] + Tpg;
+    Tpg = (dt_2[0] + (_t1 - t1)) * dt[0] + Tpg;   /// m_Tpg = 0.5f * D.m_Tvg * D.m_Tvg;
 
-    w.GetScaled(dt, wdt);
+    w.GetScaled(dt, wdt);   // wdt = w * dt
     //dR.SetRodrigues(wdt);
     //Rotation3D::ABT(dR, RT[r1], D->m_R);
     dq.SetRodrigues(wdt, eps);
@@ -850,7 +850,7 @@ void PreIntegrate(const Measurement *us, const int N, const float t1, const floa
 
     const LA::AlignedMatrix3x3f RTdt = (RT[r1] + RT[r2]) * dt_2;
     const LA::AlignedVector3f dv = RTdt * a;
-    const LA::AlignedVector3f dp = D->m_v * dt + dv * dt_2;
+    const LA::AlignedVector3f dp = D->m_v * dt + dv * dt_2;  // TODO: 是否需要调整D->m_v和dp的计算顺序
     D->m_v += dv;
     D->m_p += dp;
 //#ifdef CFG_DEBUG

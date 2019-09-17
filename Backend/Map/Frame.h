@@ -97,7 +97,7 @@ class Tag {
   }
  public:
   int m_iFrm;
-  float m_t;
+  float m_t;     // timestamp of current frame, should be greater than the timestamp of last IMU
   std::string m_fileName;
 #ifdef CFG_STEREO
   std::string m_fileNameRight;
@@ -119,6 +119,10 @@ class Measurement {
     UT_ASSERT(m_iKF >= 0 && m_ik >= 0 && m_iz1 <= m_iz2);
   }
  public:
+  // m_iKF : insert to m_iKFsMatch
+  //  m_ik : index for m_iKFsMatch
+  // m_iz1 : m_zs.size()
+  // m_iz2 : m_iz1 + Measurements in KF
   int m_iKF, m_ik, m_iz1, m_iz2;
 };
 
@@ -491,12 +495,12 @@ class Frame {
 #endif
   }
  public:
-  Tag m_T;
-  Depth::InverseGaussian m_d;
-  std::vector<Measurement> m_Zs;
-  std::vector<FTR::Measurement> m_zs;
+  Tag m_T;                             // tag of current frame / PushCurrentFrame()
+  Depth::InverseGaussian m_d;          // Depth of current frame
+  std::vector<Measurement> m_Zs;       // FRM measurements of current frame (KF)
+  std::vector<FTR::Measurement> m_zs;  // feature measurements of current frame (KF)
   std::vector<int> m_iKFsMatch;
-  int m_iKFNearest;
+  int m_iKFNearest;                    // 距离此ILF最近的KF index
 };
 
 class MeasurementMatch {

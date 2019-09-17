@@ -29,7 +29,7 @@ void LocalBundleAdjustor::SolveDogLeg() {
     m_x2DL = m_x2GN;
     m_beta = 1.0f;
   } else if (m_x2GD >= m_delta2) {
-    if (m_delta2 == 0.0f) {
+    if (m_delta2 == 0.0f) {  //
       m_xsDL.Set(m_xsGD);
       m_x2DL = m_x2GD;
     } else {

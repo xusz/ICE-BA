@@ -130,7 +130,7 @@ class AlignedMatrix2x2f {
     Ab.v0() += t[0] + t[1];
     Ab.v1() += t[2] + t[3];
   }
-
+  // A*B^T
   static inline void ABT(const AlignedMatrix2x2f &A, const AlignedMatrix2x2f &B, AlignedMatrix2x2f &ABT) {
     const xp128f t = A.m_00_01_10_11() * B.m_00_01_10_11();
 
@@ -355,6 +355,7 @@ template<typename TYPE> class SymmetricMatrix2x2 {
     AAT.m00() = t[0] + t[1];
     AAT.m11() = t[2] + t[3];
   }
+  // A*B^T
   static inline void ABT(const AlignedMatrix2x2f &A, const AlignedMatrix2x2f &B, SymmetricMatrix2x2<TYPE> &ABT) {
     const xp128f t = A.m_00_01_10_11() * B.m_00_01_10_11();
     ABT.m00() = t[0] + t[1];

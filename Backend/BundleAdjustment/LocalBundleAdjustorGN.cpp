@@ -166,7 +166,7 @@ void LocalBundleAdjustor::UpdateFactorsFeatureLF() {
         continue;
       }
       const bool pushFrm = (m_ucsKF[iKF] & LBA_FLAG_FRAME_PUSH_TRACK) != 0;
-      *Tr = C / m_CsKF[iKF];
+      *Tr = C / m_CsKF[iKF];       // TODO: what's this ???
 #ifdef CFG_STEREO
       Tr[1] = Tr[0];
       Tr[1].SetTranslation(m_K.m_br + Tr[0].GetTranslation());
@@ -1541,16 +1541,20 @@ bool LocalBundleAdjustor::SolveSchurComplement() {
   }
   return true;
 }
-
+/**
+ * 预处理共轭梯度法PCG(Preconditioned Conjugate Gradient)是一种SLAM中常用的位姿优化算法，
+ * 从共轭梯度法（Conjugate Gradient）衍生而来，用于快速计算最优值。
+ * solve the formula of 'Ax = b'
+ */
 bool LocalBundleAdjustor::SolveSchurComplementPCG() {
   Camera::Factor::Unitary::CC Acc;
   const int pc = 6, pm = 9;
-  const int pcm = pc + pm;
+//  const int pcm = pc + pm;
   const int Nc = int(m_LFs.size()), Ncp = Nc * pc, Nmp = Nc * pm, N = Ncp + Nmp;
   m_Acus.Resize(Nc);
   m_Amus.Resize(Nc);
   m_bs.Resize(N);
-  float *bc = m_bs.Data(), *bm = bc + Ncp;
+  float *bc = m_bs.Data(), *bm = bc + Ncp;   // bc: b for camera , bm: b for motion
   const int Nb = CountSchurComplementsOffDiagonal();
   m_Acbs.Resize(Nb);
   m_ic2b.resize(Nc);
@@ -1563,16 +1567,18 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
     m_ic2b[ic] = ib;
     const int iLF = m_ic2LF[ic];
     const LocalFrame &LF = m_LFs[iLF];
+    // Camera pose & rotation
     Camera::Factor::Unitary::CC::AmB(m_SAcusLF[iLF], m_SMcusLF[iLF], Acc);
     Acc.m_A.IncreaseDiagonal(ap, ar);
-    Acc.m_A.GetAlignedMatrix6x6f(m_Acus[ic]);
+    Acc.m_A.GetAlignedMatrix6x6f(m_Acus[ic]);     // m_Acus:下三角结构
     Acc.m_b.Get(bc);
+    // Motion
     const Camera::Factor::Unitary::MM &Amm = m_SAcmsLF[iLF].m_Au.m_Amm;
     m_Amus[ic].Set(Amm.m_A);
-    m_Amus[ic].IncreaseDiagonal(av, aba, abw);
+    m_Amus[ic].IncreaseDiagonal(av, aba, abw);    // TODO: 加入扰动 ???
     Amm.m_b.Get(bm);
     const int _ic = ic + 1;
-    if (_ic == Nc) {
+    if (_ic == Nc) {   // TODO: 不处理最后一个Frame ？？？
       continue;
     }
     LA::AlignedMatrix6x6f *Acbs = m_Acbs.Data() + ib;
@@ -1584,7 +1590,7 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
     UT_ASSERT(Nk >= 1 && Nk == std::min(Nc - ic, LBA_MAX_SLIDING_TRACK_LENGTH) - 1);
 #endif
     for (int ik = 1; ik < Nk; ++ik) {
-      LF.m_Zm.m_SMczms[ik].GetMinus(Acbs[ik]);
+      LF.m_Zm.m_SMczms[ik].GetMinus(Acbs[ik]);    // 取负数
     }
     ib += Nk;
 //#ifdef CFG_DEBUG
@@ -1691,7 +1697,7 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
   m_xsGN.Resize(N);
   m_xsGN.MakeZero();
 #endif
-  ApplyM(m_rs, &m_ps);
+  ApplyM(m_rs, &m_ps);     // z_0 = M^{-1} r_0, p_0 = z_0
   ConvertCameraMotionResiduals(m_rs, m_ps, &Se2, &e2Max);
 #ifdef CFG_DEBUG
   UT_ASSERT(Se2 >= 0.0f && e2Max >= 0.0f);
@@ -1748,9 +1754,9 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
     const float Se2ConvMax = Se2 * BA_PCG_MAX_CONVERGE_RESIDUAL_RATIO;
 #endif
     int cnt = 0;
-    const int nIters = std::min(N, BA_PCG_MAX_ITERATIONS);
+    const int nIters = std::min(N, BA_PCG_MAX_ITERATIONS);    //  TODO:
     for (m_iIterPCG = 0; m_iIterPCG < nIters; ++m_iIterPCG) {
-      ApplyM(m_rs, &m_zs);
+      ApplyM(m_rs, &m_zs);     //  m_zs = M^{-1} * m_rs
 //#ifdef CFG_DEBUG
 #if 0
       if (m_iIterPCG == 13)
@@ -1795,7 +1801,7 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
       if (Se2 < Se2Min) {
         Se2Min = Se2;
         e2MaxMin = e2Max;
-        m_xsGN = m_xs;
+        m_xsGN = m_xs;         // m_xs is the result
         //cnt = 0;
       } else {
         //////////////////////////////////////////////////////////////////////////
@@ -1834,6 +1840,7 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
       m_drs.MakeMinus();
       m_drs -= m_rs;
 #endif
+      // if r_{k+1} is sufficiently small , then exit loop
       const int i = (Se2Min <= Se2ConvMin && m_iIterPCG >= BA_PCG_MIN_ITERATIONS) ? 0 : 1;
       if (Se2 == 0.0f || e2MaxMin < e2MaxConv[i]) {
         scc = true;
@@ -1844,12 +1851,12 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
       }
 //#if 0
 #if 1
-      beta = Se2 / Se2Pre;
+      beta = Se2 / Se2Pre;   // \beta_{k} = z^T_{k+1} * r_{k+1} / z^T_{k} * r_{k}
 #else
       beta = -m_zs.Dot(m_drs) / Se2Pre;
 #endif
-      m_ps *= beta;
-      m_ps += m_zs;
+      m_ps *= beta;          // \beta_{k} * p_{k}
+      m_ps += m_zs;          // p_{k+1} = z_{k+1} + \beta_{k} * p_{k}
 //#ifdef CFG_DEBUG
 #if 0
       const std::string dir = m_dir + "pcg/";
@@ -1870,7 +1877,7 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
         UT::DebugStart();
       }
 #endif
-      ApplyA(m_ps, &m_drs);
+      ApplyA(m_ps, &m_drs);   // m_drs = A * P_{k}
 //#ifdef CFG_DEBUG
 #if 0
       const std::string dir = m_dir + "pcg/";
@@ -1883,7 +1890,7 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
         UT::DebugStop();
       }
 #endif
-      alpha = Se2 / m_ps.Dot(m_drs);
+      alpha = Se2 / m_ps.Dot(m_drs);   // \alpha_{k} = Z^T_{k} * r_{k} / P^{T} A P
 #ifdef _MSC_VER
       if (!_finite(alpha)) {
 #else
@@ -1892,10 +1899,10 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
         scc = false;
         break;
       }
-      m_drs *= alpha;
-      m_rs -= m_drs;
-      m_ps.GetScaled(alpha, m_dxs);
-      m_xs += m_dxs;
+      m_drs *= alpha;                  // m_drs = \alpha_{k} * A * P_{k}
+      m_rs -= m_drs;                   // r_{k+1} := r_{k} + \alpha_{k} * A * P_{k}
+      m_ps.GetScaled(alpha, m_dxs);    // m_dxs = m_ps * \alpha
+      m_xs += m_dxs;                   // x_{k+1} = x_{k} + \alpha_{k} * p_{k}
 #if 0
 //#if 1
       ApplyA(m_xs, &m_drs);
@@ -1917,7 +1924,7 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
       m_ps.AssertEqual(UT::String("%sp%02d.txt", dir.c_str(), m_iIterPCG), 2, "", -1.0f, -1.0f);
       m_zs.AssertEqual(UT::String("%sz%02d.txt", dir.c_str(), m_iIterPCG), 2, "", -1.0f, -1.0f);
 #endif
-    }
+    }   // for (m_iIterPCG = 0; m_iIterPCG < nIters; ++m_iIterPCG)
 #if 0
     static bool g_first = true;
     FILE *fp = fopen("D:/tmp/pcg/scc_lba.txt", g_first ? "w" : "a");
@@ -1927,7 +1934,7 @@ bool LocalBundleAdjustor::SolveSchurComplementPCG() {
 #endif
   } else {
     m_iIterPCG = 0;
-  }
+  }    // if (std::isfinite(alpha)) {
   m_xsGN.MakeMinus();
 //#ifdef CFG_DEBUG
 #if 0
@@ -2108,7 +2115,7 @@ bool LocalBundleAdjustor::SolveSchurComplementLast() {
   b.GetBlock(12, x);  x.Get(xm2 + 6); m_xbw2s[ic2] = x.SquaredLength();
   return true;
 }
-
+// 为PCG准备调节器
 void LocalBundleAdjustor::PrepareConditioner() {
   const int pc = 6, pm = 9;
   //const float eps = 0.0f;
@@ -2398,7 +2405,9 @@ void LocalBundleAdjustor::PrepareConditioner() {
   UT::Print("%e vs %e\n", e_e1.norm(), e_e2.norm());
 #endif
 }
-
+/**
+ * Mxs = M_{-1} xs
+ */
 void LocalBundleAdjustor::ApplyM(const LA::AlignedVectorXf &xs, LA::AlignedVectorXf *Mxs) {
   const int Nb = std::min(LBA_PCG_CONDITIONER_BAND, LBA_MAX_SLIDING_TRACK_LENGTH);
   const int Nc = int(m_LFs.size());
@@ -2497,7 +2506,9 @@ void LocalBundleAdjustor::ApplyM(const LA::AlignedVectorXf &xs, LA::AlignedVecto
     m_bcs[ic].Set(_bc);
   }
 }
-
+/**
+ * Axs = A * xs
+ */
 void LocalBundleAdjustor::ApplyA(const LA::AlignedVectorXf &xs, LA::AlignedVectorXf *Axs) {
   //LA::AlignedVector6f v6;
   const LA::Vector6f *xcs = (LA::Vector6f *) xs.Data();

@@ -31,6 +31,7 @@ class LocalMap {
 
  public:
 
+  // Camera Local Frame
   class CameraLF {
    public:
     inline CameraLF() {}
@@ -44,12 +45,14 @@ class LocalMap {
    public:
     Camera m_C;
     int m_iFrm;
-    ubyte m_uc;
+    ubyte m_uc;   // update flag
 #ifdef CFG_CHECK_REPROJECTION
     std::pair<float, float> m_e;
 #endif
   };
 
+  // TODO: camera 只有刚性旋转，为什么没有Position ???
+  // CameraKeyFrame
   class CameraKF : public GlobalMap::Camera {
    public:
     inline CameraKF() : GlobalMap::Camera() {}
@@ -90,12 +93,12 @@ class LocalMap {
 
  protected:
 
-  std::list<CameraLF> m_CsLF;
-  std::vector<CameraKF> m_CsKF;
+  std::list<CameraLF> m_CsLF;     // CamerasLocalFrame（s), it's local
+  std::vector<CameraKF> m_CsKF;   // CamerasKeyFrame（s), it's global
   std::vector<Depth::InverseGaussian> m_ds;
   std::vector<int> m_iKF2d;
   ubyte m_Uc;
-  std::vector<ubyte> m_uds;
+  std::vector<ubyte> m_uds;       // update flags
   boost::shared_mutex m_MT;
 
 };

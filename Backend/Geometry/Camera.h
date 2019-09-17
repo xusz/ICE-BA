@@ -192,6 +192,7 @@ class Camera {
         }
        public:
         union {
+          // SymmetricMatrix6x6f : 上三角
           struct { LA::SymmetricMatrix6x6f m_A; float m_r; LA::Vector6f m_b; };
           xp128f m_data[7];
         };
@@ -370,7 +371,7 @@ class Camera {
       //CC m_Acc;
       CM m_Acm;
       MM m_Amm;
-    };
+    };   // Unitary
     class Binary {
      public:
       class CC : public LA::AlignedMatrix6x6f {
@@ -671,7 +672,7 @@ class Camera {
     Binary m_Ab;
   };
 
-  class Conditioner {
+  class Conditioner {    // 调节器
    public:
 #ifdef CFG_PCG_FULL_BLOCK
     class C : public LA::AlignedMatrix6x6f {
@@ -788,7 +789,7 @@ class Camera {
       LA::AlignedMatrix3x3f m_Mv, m_Mba, m_Mbw;
     };
 #endif
-  };
+  };   // Conditioner
 
 #ifdef CFG_DEBUG_EIGEN
   class EigenFactor {
@@ -1251,8 +1252,8 @@ class Camera {
   }
 
  public:
-
-  Rigid3D m_T;
+  // 第 i 帧的状态
+  Rigid3D m_T;    // Rotation3D，对应R
   Point3D m_p;
   LA::AlignedVector3f m_v, m_ba, m_bw;
 

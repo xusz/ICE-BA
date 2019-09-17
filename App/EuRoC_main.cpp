@@ -343,45 +343,38 @@ bool create_iba_frame(const vector<cv::KeyPoint>& kps_l,
 }
 
 
-int main(int argc, char** argv) {
-  google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, true);
-  google::InstallFailureSignalHandler();
-  if (FLAGS_imgs_folder.empty()) {
-    google::ShowUsageWithFlags(argv[0]);
-    return -1;
-  }
-  vector<string> img_file_paths;
-  vector<string> slave_img_file_paths;
-  vector<string> iba_dat_file_paths;
+int run_ICE() {
+//  vector<string> img_file_paths;
+//  vector<string> slave_img_file_paths;
+//  vector<string> iba_dat_file_paths;
 
-  constexpr int reserve_num = 5000;
-  img_file_paths.reserve(reserve_num);
-  slave_img_file_paths.reserve(reserve_num);
-  fs::path p(FLAGS_imgs_folder + "/mav0/cam0");
-  if (!fs::is_directory(p)) {
-    LOG(ERROR) << p << " is not a directory";
-    return -1;
-  }
-  if (!fs::is_directory(FLAGS_imgs_folder + "/dat")) {
-    fs::create_directories(FLAGS_imgs_folder + "/dat");
-  }
-  vector<string> limg_name, rimg_name;
-  load_image_data(FLAGS_imgs_folder, limg_name, rimg_name);
-  for (int i=0; i<limg_name.size(); i++) {
-    string l_png = p.string() + "/data/" + limg_name[i];
-    img_file_paths.push_back(l_png);
-    slave_img_file_paths.push_back(FLAGS_imgs_folder + "/mav0/cam1/data/" + rimg_name[i]);
-    iba_dat_file_paths.push_back(FLAGS_imgs_folder + "/dat/" + limg_name[i] + ".dat");
-  }
-  if (!FLAGS_stereo) {
-    slave_img_file_paths.clear();
-  }
-
-  if (img_file_paths.size() == 0) {
-    LOG(ERROR) << "No image files for detection";
-    return -1;
-  }
+//  constexpr int reserve_num = 5000;
+//  img_file_paths.reserve(reserve_num);
+//  slave_img_file_paths.reserve(reserve_num);
+//  fs::path p(FLAGS_imgs_folder + "/mav0/cam0");
+//  if (!fs::is_directory(p)) {
+//    LOG(ERROR) << p << " is not a directory";
+//    return -1;
+//  }
+//  if (!fs::is_directory(FLAGS_imgs_folder + "/dat")) {
+//    fs::create_directories(FLAGS_imgs_folder + "/dat");
+//  }
+//  vector<string> limg_name, rimg_name;
+//  load_image_data(FLAGS_imgs_folder, limg_name, rimg_name);
+//  for (int i=0; i<limg_name.size(); i++) {
+//    string l_png = p.string() + "/data/" + limg_name[i];
+//    img_file_paths.push_back(l_png);
+//    slave_img_file_paths.push_back(FLAGS_imgs_folder + "/mav0/cam1/data/" + rimg_name[i]);
+//    iba_dat_file_paths.push_back(FLAGS_imgs_folder + "/dat/" + limg_name[i] + ".dat");
+//  }
+//  if (!FLAGS_stereo) {
+//    slave_img_file_paths.clear();
+//  }
+//
+//  if (img_file_paths.size() == 0) {
+//    LOG(ERROR) << "No image files for detection";
+//    return -1;
+//  }
   XP::DuoCalibParam duo_calib_param;
   try {
     load_asl_calib(FLAGS_imgs_folder, duo_calib_param);
@@ -413,14 +406,14 @@ int main(int argc, char** argv) {
     return -1;
   }
   // Adjust end image index for detection
-  if (FLAGS_end_idx < 0 || FLAGS_end_idx > img_file_paths.size()) {
-    FLAGS_end_idx = img_file_paths.size();
-  }
+//  if (FLAGS_end_idx < 0 || FLAGS_end_idx > img_file_paths.size()) {
+//    FLAGS_end_idx = img_file_paths.size();
+//  }
 
   FLAGS_start_idx = std::max(0, FLAGS_start_idx);
   // remove all frames before the first IMU data
-  while (FLAGS_start_idx < FLAGS_end_idx && get_timestamp_from_img_name(img_file_paths[FLAGS_start_idx], offset_ts_ns) <= imu_samples.front().time_stamp)
-    FLAGS_start_idx++;
+//  while (FLAGS_start_idx < FLAGS_end_idx && get_timestamp_from_img_name(img_file_paths[FLAGS_start_idx], offset_ts_ns) <= imu_samples.front().time_stamp)
+//    FLAGS_start_idx++;
 
   XP::FeatureTrackDetector feat_track_detector(FLAGS_ft_len,
                                                FLAGS_ft_droprate,
@@ -444,9 +437,9 @@ int main(int argc, char** argv) {
   IBA::Solver solver;
   Eigen::Vector3f last_position = Eigen::Vector3f::Zero();
   float travel_dist = 0.f;
-  if (FLAGS_save_feature) {
-    IBA::SaveCalibration(FLAGS_imgs_folder + "/calibration.dat", to_iba_calibration(duo_calib_param));
-  }
+//  if (FLAGS_save_feature) {
+//    IBA::SaveCalibration(FLAGS_imgs_folder + "/calibration.dat", to_iba_calibration(duo_calib_param));
+//  }
   solver.Create(to_iba_calibration(duo_calib_param),
                 257,
                 IBA_VERBOSE_NONE,
@@ -488,7 +481,7 @@ int main(int argc, char** argv) {
   std::vector<cv::KeyPoint> pre_image_key_points;
   cv::Mat pre_image_features;
   for (int it_img = FLAGS_start_idx; it_img < FLAGS_end_idx; ++it_img) {
-    VLOG(0) << " start detection at ts = " << fs::path(img_file_paths[it_img]).stem().string();
+//    VLOG(0) << " start detection at ts = " << fs::path(img_file_paths[it_img]).stem().string();
     auto read_img_start = std::chrono::high_resolution_clock::now();
     cv::Mat img_in_raw;
     img_in_raw = cv::imread(img_file_paths[it_img], CV_LOAD_IMAGE_GRAYSCALE);
@@ -497,7 +490,7 @@ int main(int argc, char** argv) {
     cv::Mat img_in_smooth;
     cv::blur(img_in_raw, img_in_smooth, cv::Size(3, 3));
     if (img_in_smooth.rows == 0) {
-      LOG(ERROR) << "Cannot load " << img_file_paths[it_img];
+//      LOG(ERROR) << "Cannot load " << img_file_paths[it_img];
       return -1;
     }
     // get timestamp from image file name (s)
@@ -529,13 +522,13 @@ int main(int argc, char** argv) {
               << " -> " << imu_meas.back().time_stamp;
     }
 
-    if (!slave_img_file_paths.empty()) {
-      if (!slave_img_file_paths[it_img].empty()) {
-        cv::Mat slave_img_in;
-        slave_img_in = cv::imread(slave_img_file_paths[it_img], CV_LOAD_IMAGE_GRAYSCALE);
-        cv::blur(slave_img_in, slave_img_smooth, cv::Size(3, 3));
-      }
-    }
+//    if (!slave_img_file_paths.empty()) {
+//      if (!slave_img_file_paths[it_img].empty()) {
+//        cv::Mat slave_img_in;
+//        slave_img_in = cv::imread(slave_img_file_paths[it_img], CV_LOAD_IMAGE_GRAYSCALE);
+//        cv::blur(slave_img_in, slave_img_smooth, cv::Size(3, 3));
+//      }
+//    }
     // use optical flow  from the 1st frame
     if (it_img != FLAGS_start_idx) {
       CHECK(it_img >= 1);
@@ -633,9 +626,9 @@ int main(int argc, char** argv) {
     IBA::KeyFrame KF;
     create_iba_frame(key_pnts, key_pnts_slave, imu_meas, time_stamp, &CF, &KF);
     solver.PushCurrentFrame(CF, KF.iFrm == -1 ? nullptr : &KF);
-    if (FLAGS_save_feature) {
-      IBA::SaveCurrentFrame(iba_dat_file_paths[it_img], CF, KF);
-    }
+//    if (FLAGS_save_feature) {
+//      IBA::SaveCurrentFrame(iba_dat_file_paths[it_img], CF, KF);
+//    }
     pre_image_key_points = key_pnts;
     pre_image_features = orb_feat.clone();
     // show pose
@@ -643,12 +636,12 @@ int main(int argc, char** argv) {
     cv::waitKey(1);
     prev_time_stamp = time_stamp;
   }
-  std::string temp_file = "/tmp/" + std::to_string(offset_ts_ns) + ".txt";
-  solver.SaveCamerasGBA(temp_file, false /* append */, true /* pose only */);
+//  std::string temp_file = "/tmp/" + std::to_string(offset_ts_ns) + ".txt";
+//  solver.SaveCamerasGBA(temp_file, false /* append */, true /* pose only */);
   solver.Stop();
   solver.Destroy();
 
   // for comparsion with asl groundtruth
-  convert_to_asl_timestamp(temp_file, FLAGS_gba_camera_save_path, offset_ts_ns);
+//  convert_to_asl_timestamp(temp_file, FLAGS_gba_camera_save_path, offset_ts_ns);
   return 0;
 }

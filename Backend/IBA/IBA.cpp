@@ -214,6 +214,7 @@ void Solver::PushCurrentFrame(const CurrentFrame &CF, const KeyFrame *KF, const 
       m_internal->m_LBA.PushLocalFrame(m_internal->m_ILF);
       m_internal->m_LBA.PushKeyFrame(m_internal->m_IKF, serial);
     } else {
+      // TODO: never execute here
       m_internal->PushKeyFrame(*KF);
       m_internal->PushCurrentFrame(CF);
       m_internal->m_LM.IBA_PushKeyFrame(m_internal->m_IKF);
@@ -1537,10 +1538,10 @@ static inline void Rectify(const ::Intrinsic &K, const Point2D &x,
                          , Rotation3D *Rr = NULL
 #endif
                          ) {
-  ::Point2D xd;
-  Point2DCovariance Sd, Sn;
+  ::Point2D xd;                 // Normalized
+  Point2DCovariance Sd, Sn;     // Normalized
   LA::AlignedMatrix2x2f J, JS;
-  LA::AlignedMatrix2x2f Wd;
+  LA::AlignedMatrix2x2f Wd;     // Sd.Inverse
   K.k().ImageToNormalized(x.x, xd);
   K.Undistort(xd, xn, &J, UM);
 //#ifdef CFG_DEBUG
@@ -1553,7 +1554,7 @@ static inline void Rectify(const ::Intrinsic &K, const Point2D &x,
 #endif
   K.k().ImageToNormalized(x.S, Sd);
   Sd.GetInverse(Wd);
-  LA::AlignedMatrix2x2f::ABT(J, Wd, JS);
+  LA::AlignedMatrix2x2f::ABT(J, Wd, JS);      // A*B^T
   LA::SymmetricMatrix2x2f::ABT(JS, J, *Wn);
   Wn->GetInverse(Sn);
 #ifdef CFG_STEREO
@@ -1620,7 +1621,7 @@ const GlobalMap::InputKeyFrame& Internal::PushKeyFrame(const KeyFrame &KF, const
     m_IKF.m_C.m_v = C->m_v;
     m_IKF.m_C.m_ba = C->m_ba;
     m_IKF.m_C.m_bw = C->m_bw;
-  } else {
+  } else {  // TODO: 在camera参数未知的情况下，是否可以执行此处
     m_IKF.m_C.m_v.Invalidate();
     m_IKF.m_C.m_ba.Invalidate();
     m_IKF.m_C.m_bw.Invalidate();
@@ -1914,17 +1915,17 @@ void Internal::ConvertFeatureMeasurements(const std::vector<MapPointMeasurement>
   for (i = j = 0; i < Nz1; ++i) {
     const MapPointMeasurement &z1 = zs[i];
     FeatureMeasurement &z2 = m_zsSortTmp[j];
-    if (z1.idx >= N) {
+    if (z1.idx >= N) {     // global ponit idx >= N ???  N is global ponit id ???
       continue;
     }
-    const int iX = m_idx2iX[z1.idx];
+    const int iX = m_idx2iX[z1.idx];      // global ponit idx to feature index(X)
     if (iX == -1) {
       continue;
     }
 #ifdef CFG_DEBUG
     UT_ASSERT(iX != -1);
 #endif
-    if ((z2.m_id = m_iX2d[iX]) == -1) {
+    if ((z2.m_id = m_iX2d[iX]) == -1) {   // feature index(X) to feature id
       continue;
     }
 #ifdef CFG_STEREO
@@ -1975,7 +1976,7 @@ void Internal::ConvertFeatureMeasurements(const std::vector<MapPointMeasurement>
       }
 #endif
       const FeatureMeasurement &_z = m_zsSortTmp[i];
-      z.m_ix = _z.m_id - id0;
+      z.m_ix = _z.m_id - id0;   // m_ix : index of feature id
 #if 0
       if (m_zsTmp.size() == 368) {
         UT::DebugStart();
